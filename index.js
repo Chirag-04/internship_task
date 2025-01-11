@@ -15,13 +15,26 @@ connectDB();
 app.use("/", (req, res) => {
   res.json({
     message: "Welcome to the Crypto API!",
-    guide: {
-      "GET /": "Lists all available API endpoints and their descriptions.",
-      "GET /stats": "Fetches statistical data about cryptocurrencies, including aggregated metrics.",
-      "GET /deviation": "Calculates and provides the price deviation of cryptocurrencies over a specific period.",
-    },
+    guide: [
+      {
+        endpoint: "GET /api",
+        description: "Fetches detailed data for a specific cryptocurrency.",
+        example: "/api/?id=bitcoin",
+      },
+      {
+        endpoint: "GET /api/stats",
+        description: "Provides statistical data for a specific cryptocurrency.",
+        example: "/api/stats?coin=bitcoin",
+      },
+      {
+        endpoint: "GET /api/deviation",
+        description: "Calculates and returns the price deviation for a specific cryptocurrency.",
+        example: "/api/deviation?coin=bitcoin",
+      },
+    ],
   });
 });
+
 
 
 app.use('/api',cryptoRouter );
