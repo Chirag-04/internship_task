@@ -1,6 +1,62 @@
-import {findStandardDeviation} from '../utils/helper.js'
+import { findStandardDeviation } from '../utils/helper.js';
 import Crypto from '../db/models/cryptoModel.js';
+import cron from 'node-cron';
+// Function to fetch and update crypto data
+const fetchCryptoData = async () => {
+  try {
+    const ids = ["bitcoin", "ethereum", "matic-network"];
+    const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${ids.join(
+      ","
+    )}&vs_currencies=usd&include_market_cap=true&include_24hr_change=true`;
+    console.log('Fetching crypto data from CoinGecko...');
 
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      console.error("Failed to fetch from CoinGecko");
+      return;
+    }
+
+    const data = await response.json();
+
+    for (const id of ids) {
+      const values = data[id];
+      const existingDoc = await Crypto.findOne({ name: id });
+
+      if (existingDoc) {
+        const priceArray = existingDoc.price;
+        const newPrice = values.usd;
+
+        existingDoc.market_cap = values.usd_market_cap;
+        existingDoc.change_24h = values.usd_24h_change;
+
+        if (!priceArray.includes(newPrice)) {
+          existingDoc.price.push(newPrice);
+        }
+
+        await existingDoc.save();
+        console.log(`Updated ${id} data.`);
+      } else {
+        const newData = new Crypto({
+          name: id,
+          market_cap: values.usd_market_cap,
+          change_24h: values.usd_24h_change,
+          price: [values.usd],
+        });
+
+        await newData.save();
+        console.log(`Added new data for ${id}.`);
+      }
+    }
+  } catch (err) {
+    console.error("Error fetching crypto data:", err);
+  }
+};
+cron.schedule("0 */2 * * *", fetchCryptoData);
+
+
+
+// get crypt data
 export const getCryptoData = async(req , res)=>{
     try {
         const id = req.query.id;
@@ -63,7 +119,7 @@ export const getCryptoData = async(req , res)=>{
       }
 }
 
-
+// get stats 
 export const getStats = async(req , res)=>{
     const coin = req.query.coin;
     try {
@@ -89,7 +145,7 @@ export const getStats = async(req , res)=>{
     }
 }
 
-
+// get deviation
 export const getDeviation = async(req , res)=>{
     const coin = req.query.coin;
     try {
