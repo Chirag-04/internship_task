@@ -7,8 +7,7 @@ import connectDB from "./db/connection.js";
 
 dotenv.config();
 const app = express();
-const port = 3000;
-// const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 connectDB();
